@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c233d"/>
+      <stop offset="1" stop-color="#143845"/>
+    </linearGradient>
+    <linearGradient id="db" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#86eee0"/>
+      <stop offset="1" stop-color="#27b8bd"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#tile)"/>
+  <path d="M276 306v382c0 63 106 114 236 114s236-51 236-114V306" fill="url(#db)"/>
+  <ellipse cx="512" cy="306" rx="236" ry="114" fill="#a0f8e9"/>
+  <ellipse cx="512" cy="306" rx="164" ry="66" fill="#1c7c8e"/>
+  <path d="M276 438c0 63 106 114 236 114s236-51 236-114M276 566c0 63 106 114 236 114s236-51 236-114" fill="none" stroke="#133c50" stroke-width="28"/>
+  <circle cx="665" cy="730" r="76" fill="#143845" stroke="#9df5e7" stroke-width="14"/>
+  <path d="m642 700 31 30-31 30m47 0h25" fill="none" stroke="#9df5e7" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

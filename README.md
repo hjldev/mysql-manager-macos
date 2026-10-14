@@ -56,8 +56,9 @@ Requires Xcode 26+ (Swift 6.2). Runs on macOS 14+.
 ./build.sh
 ```
 
-Produces `build/MySQL Manager Native.app`. `swift build` or opening
-`Package.swift` in Xcode also works for development.
+Produces `build/MySQL Manager Native.app`. The app icon is rendered from
+`assets/icon.svg` by `svg2icns.swift`. `swift build` or
+opening `Package.swift` in Xcode also works for development.
 
 ### Tests
 

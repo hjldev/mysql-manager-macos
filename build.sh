@@ -16,7 +16,12 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/$EXE"
 strip -x "$APP/Contents/MacOS/$EXE"
-cp ../src-tauri/icons/icon.icns "$APP/Contents/Resources/AppIcon.icns"
+ICNS=build/AppIcon.icns
+if [[ ! -f "$ICNS" || assets/icon.svg -nt "$ICNS" || svg2icns.swift -nt "$ICNS" ]]; then
+  echo "==> icon"
+  swift svg2icns.swift assets/icon.svg "$ICNS"
+fi
+cp "$ICNS" "$APP/Contents/Resources/AppIcon.icns"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
