@@ -1,8 +1,11 @@
 import AppKit
 import Foundation
 
-/// Launch arguments for repeatable memory measurements (see measure.sh):
-///   -mmAutoTable db.table   open the table on the first saved connection
+/// Launch arguments for repeatable measurements (see measure.sh):
+///   -mmAutoConn <name>      use this saved connection (default: the first)
+///   -mmAutoDB db            expand the database in the tree
+///   -mmAutoTables YES       and its tables folder
+///   -mmAutoTable db.table   open the table
 ///   -mmAutoSQL "<sql>"      open a query tab and run it
 ///   -mmSnapshot <file.png>  then save an image of the window
 extension AppModel {
@@ -11,16 +14,26 @@ extension AppModel {
         let table = defaults.string(forKey: "mmAutoTable")
         let sql = defaults.string(forKey: "mmAutoSQL")
         let snapshot = defaults.string(forKey: "mmSnapshot")
-        guard table != nil || sql != nil || snapshot != nil else { return }
+        let connName = defaults.string(forKey: "mmAutoConn")
+        let autoDB = defaults.string(forKey: "mmAutoDB")
+        guard table != nil || sql != nil || snapshot != nil || autoDB != nil else { return }
         Task {
             // wait for the saved connections
             for _ in 0..<50 where connections.isEmpty {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            if (table != nil || sql != nil), let conn = connections.first, let root = node("conn:\(conn.id)") {
+            let conn = connName.map { n in connections.first { $0.name == n } } ?? connections.first
+            if table != nil || sql != nil || autoDB != nil, let conn, let root = node("conn:\(conn.id)") {
                 do {
                     try await load(root)
                     root.isExpanded = true
+                    if let autoDB, let dbNode = node("db:\(conn.id):\(autoDB)") {
+                        try await load(dbNode)
+                        dbNode.isExpanded = true
+                        if defaults.bool(forKey: "mmAutoTables") {
+                            for c in dbNode.children ?? [] where c.kind == .tables { c.isExpanded = true }
+                        }
+                    }
                     if let table, let dot = table.firstIndex(of: ".") {
                         let db = String(table[..<dot]), name = String(table[table.index(after: dot)...])
                         if let dbNode = node("db:\(conn.id):\(db)") {

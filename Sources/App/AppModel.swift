@@ -16,7 +16,7 @@ final class TreeNode: Identifiable {
     let table: String?
     var label: String
     var info: TableInfo?
-    /// nil until loaded
+    /// nil until loaded. Set through `AppModel.setChildren` so the tree view reloads.
     var children: [TreeNode]?
     var isExpanded = false
     var isLoading = false
@@ -143,6 +143,8 @@ final class AppModel {
     /// connection id → server version, for open connections
     var opened: [String: String] = [:]
     var roots: [TreeNode] = []
+    /// Bumped whenever `roots` or any node's children change.
+    private(set) var treeRevision = 0
     var selectedNodeID: String?
     var search = ""
     var tabs: [WorkTab] = []
@@ -308,6 +310,12 @@ final class AppModel {
             }
             return TreeNode(id: "conn:\(c.id)", kind: .connection, connID: c.id, label: c.name)
         }
+        treeRevision += 1
+    }
+
+    func setChildren(_ node: TreeNode, _ children: [TreeNode]?) {
+        node.children = children
+        treeRevision += 1
     }
 
     func node(_ id: String) -> TreeNode? {
@@ -348,14 +356,14 @@ final class AppModel {
             try await ensureOpen(connID)
             let names = try await onBackground { try db.databases(connID) }
             let old = Dictionary((node.children ?? []).map { ($0.db ?? "", $0) }, uniquingKeysWith: { a, _ in a })
-            node.children = names.map {
+            setChildren(node, names.map {
                 old[$0] ?? TreeNode(id: "db:\(connID):\($0)", kind: .database, connID: connID, db: $0, label: $0)
-            }
+            })
         case .database:
             let name = node.db ?? ""
             let tables = try await onBackground { try db.tables(connID, db: name) }
             let wasExpanded = Set((node.children ?? []).filter(\.isExpanded).map(\.id))
-            node.children = dbChildren(connID, name, tables)
+            setChildren(node, dbChildren(connID, name, tables))
             for c in node.children ?? [] where wasExpanded.contains(c.id) { c.isExpanded = true }
         default:
             break
@@ -401,14 +409,16 @@ final class AppModel {
 
     func collapseConnection(_ connID: String) {
         guard let n = node("conn:\(connID)") else { return }
-        n.children = nil
+        setChildren(n, nil)
         n.isExpanded = false
+        trimMemory()
     }
 
     func collapseDatabase(_ connID: String, _ db: String) {
         guard let n = node("db:\(connID):\(db)") else { return }
-        n.children = nil
+        setChildren(n, nil)
         n.isExpanded = false
+        trimMemory()
     }
 
     // MARK: Tabs
